@@ -1,0 +1,49 @@
+name: ZAP Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  zap-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.23'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: go mod tidy
+
+      # Step 4: Build Go application
+      - name: Build Go application
+        run: go build -o hello-world .
+
+      # Step 5: Run the Go application in the background
+      - name: Run Hello World application
+        run: |
+          nohup ./hello-world &
+          sleep 5 # wait a moment for the server to start
+
+      # Step 6: Set up ZAP security scanner
+      - name: Run ZAP Full Scan
+        uses: zaproxy/action-full-scan@v0.7.0
+        with:
+          target: "http://localhost:8080"
+          zap_options: "-config api.disablekey=true"
+
+      # Step 7: Stop the Go application (optional, clean up)
+      - name: Stop Hello World application
+        run: kill $(lsof -t -i:8080)
