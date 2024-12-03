@@ -37,13 +37,20 @@ jobs:
           nohup ./hello-world &
           sleep 5 # wait a moment for the server to start
 
-      # Step 6: Set up ZAP security scanner
+      # Step 6: Run ZAP Full Scan and Generate Report
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "http://localhost:8080"
-          zap_options: "-config api.disablekey=true"
+          zap_options: "-config api.disablekey=true -report /tmp/zap-report.html"
 
-      # Step 7: Stop the Go application (optional, clean up)
+      # Step 7: Upload ZAP Scan Report as an Artifact
+      - name: Upload ZAP Scan Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-scan-report
+          path: /tmp/zap-report.html
+
+      # Step 8: Stop Hello World application
       - name: Stop Hello World application
         run: kill $(lsof -t -i:8080)
