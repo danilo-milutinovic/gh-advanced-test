@@ -37,14 +37,18 @@ jobs:
           nohup ./hello-world &
           sleep 5 # wait a moment for the server to start
 
-      # Step 6: Run ZAP Full Scan and Generate Report
+      # Step 6: Run ZAP Full Scan
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -report /tmp/zap-report.html"
+          cmd_options: "-config api.disablekey=true -cmd options.report.path=/tmp/zap-report.html"
 
-      # Step 7: Upload ZAP Scan Report as an Artifact
+      # Step 7: Debugging: List directory
+      - name: List /tmp directory
+        run: ls -l /tmp
+
+      # Step 8: Upload ZAP Scan Report
       - name: Upload ZAP Scan Report
         uses: actions/upload-artifact@v3
         with:
