@@ -47,19 +47,22 @@ jobs:
           gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project "${GCP_PROJECT_ID}"
 
-      # Step 7: Run ZAP Full Scan and Upload Directly to GCS
-      - name: Run ZAP Full Scan and Upload Report
+      # Step 7: Run ZAP Full Scan
+      - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: |
-            -config api.disablekey=true
-            -cmd options.report.path=/zap/wrk/report.html &&
-            gsutil cp /zap/wrk/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+          cmd_options: "-config api.disablekey=true -cmd options.report.path=/zap/wrk/report.html"
 
-      # Step 8: Clean up key file
+      # Step 8: Upload ZAP Scan Report Directly to GCS
+      - name: Upload Report to GCS
+        run: |
+          gsutil cp /zap/wrk/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+
+      # Step 9: Clean up key file
       - name: Clean up key file
         run: rm gcp-key.json
 
-      # Step 9: Stop Hello World application
+      # Step 10: Stop Hello World application
+      - name: Stop Hello World application
         run: kill $(lsof -t -i:8080)
