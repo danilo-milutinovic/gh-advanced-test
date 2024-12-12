@@ -37,34 +37,29 @@ jobs:
           nohup ./hello-world &
           sleep 5 # wait a moment for the server to start
 
-      # Step 6: Run ZAP Full Scan
-      - name: Run ZAP Full Scan
+      # Step 6: Authenticate with GCS
+      - name: Authenticate with GCS
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        run: |
+          echo "${GCP_SERVICE_ACCOUNT_KEY}" > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
+          gcloud config set project YOUR_PROJECT_ID
+
+      # Step 7: Run ZAP Full Scan and Upload Directly to GCS
+      - name: Run ZAP Full Scan and Upload Report
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -config report.dir=/zap/wrk"
+          cmd_options: |
+            -config api.disablekey=true
+            -cmd options.report.path=/zap/wrk/report.html &&
+            gsutil cp /zap/wrk/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
 
-      # Step 7: Debugging: List potential directories
-      - name: List directories
-        run: |
-          echo "Checking /tmp:"
-          ls -l /tmp
-          echo "Checking /zap/wrk:"
-          ls -l /zap/wrk
-          echo "Checking root directory:"
-          ls -l /
+      # Step 8: Clean up key file
+      - name: Clean up key file
+        run: rm gcp-key.json
 
-      # Step 8: Debugging: Check ZAP logs
-      - name: Print ZAP logs
-        run: cat /zap/wrk/zap.log || echo "No log file found"
-
-      # Step 9: Upload ZAP Scan Report as an Artifact
-      - name: Upload ZAP Scan Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: zap-scan-report
-          path: /zap/wrk/*.html
-
-      # Step 10: Stop Hello World application
+      # Step 9: Stop Hello World application
       - name: Stop Hello World application
         run: kill $(lsof -t -i:8080)
