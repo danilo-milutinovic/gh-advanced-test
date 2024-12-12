@@ -41,7 +41,7 @@ jobs:
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
-          target: "http://localhost:8080"
+          target: "https://demo-cr-812511643824.europe-west1.run.app"
           zap_options: "-config api.disablekey=true -report /tmp/zap-report.html"
 
       # Step 7: Upload ZAP Scan Report as an Artifact
