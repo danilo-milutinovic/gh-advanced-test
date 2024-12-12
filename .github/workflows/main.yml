@@ -42,15 +42,29 @@ jobs:
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -cmd options.report.path=/tmp/zap-report.html"
+          cmd_options: "-config api.disablekey=true -config report.dir=/zap/wrk"
 
-      # Step 7: Debugging: List directory
-      - name: List /tmp directory
-        run: ls -l /tmp
+      # Step 7: Debugging: List potential directories
+      - name: List directories
+        run: |
+          echo "Checking /tmp:"
+          ls -l /tmp
+          echo "Checking /zap/wrk:"
+          ls -l /zap/wrk
+          echo "Checking root directory:"
+          ls -l /
 
-      # Step 8: Upload ZAP Scan Report
+      # Step 8: Debugging: Check ZAP logs
+      - name: Print ZAP logs
+        run: cat /zap/wrk/zap.log || echo "No log file found"
+
+      # Step 9: Upload ZAP Scan Report as an Artifact
       - name: Upload ZAP Scan Report
         uses: actions/upload-artifact@v3
         with:
           name: zap-scan-report
-          path: /tmp/zap-report.html
+          path: /zap/wrk/*.html
+
+      # Step 10: Stop Hello World application
+      - name: Stop Hello World application
+        run: kill $(lsof -t -i:8080)
