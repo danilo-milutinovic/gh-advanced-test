@@ -21,7 +21,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '1.23'
+          go-version: '1.21'
 
       # Step 3: Install dependencies
       - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          zap_options: "-config api.disablekey=true -report /tmp/zap-report.html"
+          cmd_options: "-config api.disablekey=true -report /tmp/zap-report.html"
 
       # Step 7: Upload ZAP Scan Report as an Artifact
       - name: Upload ZAP Scan Report
@@ -50,7 +50,3 @@ jobs:
         with:
           name: zap-scan-report
           path: /tmp/zap-report.html
-
-      # Step 8: Stop Hello World application
-      - name: Stop Hello World application
-        run: kill $(lsof -t -i:8080)
