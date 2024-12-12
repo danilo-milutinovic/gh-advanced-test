@@ -52,17 +52,21 @@ jobs:
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -cmd options.report.path=/zap/wrk/report.html"
+          cmd_options: "-configfile=/zap/wrk/zap.conf -r /zap/wrk/report.html"
 
-      # Step 8: Upload ZAP Scan Report Directly to GCS
+      # Step 8: Debugging: List ZAP Output Directory
+      - name: List ZAP Output Directory
+        run: ls -l /zap/wrk
+
+      # Step 9: Upload ZAP Scan Report Directly to GCS
       - name: Upload Report to GCS
         run: |
           gsutil cp /zap/wrk/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
 
-      # Step 9: Clean up key file
+      # Step 10: Clean up key file
       - name: Clean up key file
         run: rm gcp-key.json
 
-      # Step 10: Stop Hello World application
+      # Step 11: Stop Hello World application
       - name: Stop Hello World application
         run: kill $(lsof -t -i:8080)
