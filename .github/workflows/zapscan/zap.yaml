@@ -1,0 +1,25 @@
+name: ZAP API Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  zap-api-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Run ZAP API Scan
+      - name: ZAP API Scan
+        uses: zaproxy/action-api-scan@v0.6.0
+        with:
+          target: "https://demo-cr-812511643824.europe-west1.run.app"  # Replace with your API URL
+          cmd_options: "-config api.disablekey=true"
