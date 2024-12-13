@@ -47,25 +47,21 @@ jobs:
           gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project "${GCP_PROJECT_ID}"
 
-      # Step 7: Run ZAP Full Scan with Writable Directory Mapping
+      # Step 7: Run ZAP Full Scan with Temporary Directory
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -r /zap/wrk/report.html"
-        env:
-          ZAP_WORK_DIR: /tmp/zap-output
-        volume:
-          - /tmp/zap-output:/zap/wrk
+          cmd_options: "-config api.disablekey=true -r ${{ runner.temp }}/report.html"
 
-      # Step 8: Debugging: List Writable Directory
-      - name: Debug Writable Directory
-        run: ls -l /tmp/zap-output
+      # Step 8: Debugging: List Temporary Directory
+      - name: Debug Temporary Directory
+        run: ls -l ${{ runner.temp }}
 
       # Step 9: Upload ZAP Scan Report Directly to GCS
       - name: Upload Report to GCS
         run: |
-          gsutil cp /tmp/zap-output/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+          gsutil cp ${{ runner.temp }}/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
 
       # Step 10: Clean up key file
       - name: Clean up key file
