@@ -10,7 +10,7 @@ on:
 
 jobs:
   zap-api-scan:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04  # Specify the version to avoid changes in ubuntu-latest
 
     steps:
       # Step 1: Checkout the repository
@@ -22,15 +22,15 @@ jobs:
         uses: zaproxy/action-api-scan@v0.6.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -t -J /tmp/zap-report.json -w /tmp/zap-report.md -r /tmp/zap-report.html"
+          cmd_options: "-J /zap/wrk/zap-report.json -w /zap/wrk/zap-report.md -r /zap/wrk/zap-report.html"
 
-      # Step 3: Debug Output Directory
+      # Step 3: Debug ZAP Output Directory
       - name: Debug Output Directory
-        run: ls -l /tmp
+        run: ls -l /home/runner/work/gh-advanced-test/gh-advanced-test
 
       # Step 4: Upload ZAP Reports
       - name: Upload ZAP Reports
         uses: actions/upload-artifact@v3
         with:
           name: zap-reports
-          path: /tmp/zap-report.*
+          path: /home/runner/work/gh-advanced-test/gh-advanced-test/zap-report.*
