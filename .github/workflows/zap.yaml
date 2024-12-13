@@ -10,7 +10,7 @@ on:
 
 jobs:
   zap-api-scan:
-    runs-on: ubuntu-24.04  # Specify version to avoid ubuntu-latest changes
+    runs-on: ubuntu-22.04
 
     steps:
       # Step 1: Checkout the repository
@@ -22,7 +22,7 @@ jobs:
         uses: zaproxy/action-api-scan@v0.6.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -J /tmp/zap-report.json -w /tmp/zap-report.md -r /tmp/zap-report.html"
+          cmd_options: "-config api.disablekey=true -t -J /tmp/zap-report.json -w /tmp/zap-report.md -r /tmp/zap-report.html"
 
       # Step 3: Debug Output Directory
       - name: Debug Output Directory
