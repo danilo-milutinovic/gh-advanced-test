@@ -1,85 +1,86 @@
-name: ZAP Scan
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  zap-scan:
-    runs-on: ubuntu-latest
-
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      # Step 2: Set up Go environment
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.21'
-
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: go mod tidy
-
-      # Step 4: Build Go application
-      - name: Build Go application
-        run: go build -o hello-world .
-
-      # Step 5: Run the Go application in the background
-      - name: Run Hello World application
-        run: |
-          nohup ./hello-world &
-          sleep 5 # wait a moment for the server to start
-
-      # Step 6: Authenticate with GCS
-      - name: Authenticate with GCS
-        env:
-          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        run: |
-          echo "${GCP_SERVICE_ACCOUNT_KEY}" > gcp-key.json
-          gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud config set project "${GCP_PROJECT_ID}"
-
-      # Step 7: Run ZAP Full Scan
-      - name: Run ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.7.0
-        with:
-          target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -r ${{ runner.temp }}/zap-report.html"
-
-      # Step 8: Debugging: List Temporary Directory
-      - name: Debug Temporary Directory
-        run: ls -l ${{ runner.temp }}
-
-      # Step 9: Check Report File
-      - name: Check Report File
-        id: debug
-        run: |
-          if [ -f "${{ runner.temp }}/zap-report.html" ]; then
-            echo "File exists"
-            echo "::set-output name=file_exists::true"
-          else
-            echo "File does not exist"
-            echo "::set-output name=file_exists::false"
-          fi
-
-      # Step 10: Conditional Upload to GCS
-      - name: Upload Report to GCS
-        if: success() && steps.debug.outputs.file_exists == 'true'
-        run: |
-          gsutil cp ${{ runner.temp }}/zap-report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
-
-      # Step 11: Clean up key file
-      - name: Clean up key file
-        run: rm gcp-key.json
-
-      # Step 12: Stop Hello World application
-      - name: Stop Hello World application
-        run: kill $(lsof -t -i:8080)
+#name: ZAP Scan
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#  pull_request:
+#    branches:
+#      - main
+#
+#jobs:
+#  zap-scan:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      # Step 1: Checkout the repository
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+#
+#      # Step 2: Set up Go environment
+#      - name: Set up Go
+#        uses: actions/setup-go@v3
+#        with:
+#          go-version: '1.21'
+#
+#      # Step 3: Install dependencies
+#      - name: Install dependencies
+#        run: go mod tidy
+#
+#      # Step 4: Build Go application
+#      - name: Build Go application
+#        run: go build -o hello-world .
+#
+#      # Step 5: Run the Go application in the background
+#      - name: Run Hello World application
+#        run: |
+#          nohup ./hello-world &
+#          sleep 5 # wait a moment for the server to start
+#
+#      # Step 6: Authenticate with GCS
+#      - name: Authenticate with GCS
+#        env:
+#          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+#          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+#        run: |
+#          echo "${GCP_SERVICE_ACCOUNT_KEY}" > gcp-key.json
+#          gcloud auth activate-service-account --key-file=gcp-key.json
+#          gcloud config set project "${GCP_PROJECT_ID}"
+#
+#      # Step 7: Run ZAP Full Scan
+#      - name: Run ZAP Full Scan
+#        uses: zaproxy/action-full-scan@v0.7.0
+#        with:
+#          target: "https://demo-cr-812511643824.europe-west1.run.app"
+#          cmd_options: "-config api.disablekey=true -r ${{ runner.temp }}/zap-report.html"
+#
+#      # Step 8: Debugging: List Temporary Directory
+#      - name: Debug Temporary Directory
+#        run: ls -l ${{ runner.temp }}
+#
+#      # Step 9: Check Report File
+#      - name: Check Report File
+#        id: debug
+#        run: |
+#          if [ -f "${{ runner.temp }}/zap-report.html" ]; then
+#            echo "File exists"
+#            echo "::set-output name=file_exists::true"
+#          else
+#            echo "File does not exist"
+#            echo "::set-output name=file_exists::false"
+#          fi
+#
+#      # Step 10: Conditional Upload to GCS
+#      - name: Upload Report to GCS
+#        if: success() && steps.debug.outputs.file_exists == 'true'
+#        run: |
+#          gsutil cp ${{ runner.temp }}/zap-report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+#
+#      # Step 11: Clean up key file
+#      - name: Clean up key file
+#        run: rm gcp-key.json
+#
+#      # Step 12: Stop Hello World application
+#      - name: Stop Hello World application
+#        run: kill $(lsof -t -i:8080)
+#
