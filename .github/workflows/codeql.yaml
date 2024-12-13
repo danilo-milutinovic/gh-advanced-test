@@ -27,7 +27,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: 'auto'  # Automatically detect supported languages in the repo
+          languages: 'javascript, go'
 
       # Step 3: Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
