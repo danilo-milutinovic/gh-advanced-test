@@ -47,26 +47,39 @@ jobs:
           gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project "${GCP_PROJECT_ID}"
 
-      # Step 7: Run ZAP Full Scan with Temporary Directory
+      # Step 7: Run ZAP Full Scan
       - name: Run ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.7.0
         with:
           target: "https://demo-cr-812511643824.europe-west1.run.app"
-          cmd_options: "-config api.disablekey=true -r ${{ runner.temp }}/report.html"
+          cmd_options: "-config api.disablekey=true -r ${{ runner.temp }}/zap-report.html"
 
       # Step 8: Debugging: List Temporary Directory
       - name: Debug Temporary Directory
         run: ls -l ${{ runner.temp }}
 
-      # Step 9: Upload ZAP Scan Report Directly to GCS
-      - name: Upload Report to GCS
+      # Step 9: Check Report File
+      - name: Check Report File
+        id: debug
         run: |
-          gsutil cp ${{ runner.temp }}/report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+          if [ -f "${{ runner.temp }}/zap-report.html" ]; then
+            echo "File exists"
+            echo "::set-output name=file_exists::true"
+          else
+            echo "File does not exist"
+            echo "::set-output name=file_exists::false"
+          fi
 
-      # Step 10: Clean up key file
+      # Step 10: Conditional Upload to GCS
+      - name: Upload Report to GCS
+        if: success() && steps.debug.outputs.file_exists == 'true'
+        run: |
+          gsutil cp ${{ runner.temp }}/zap-report.html gs://bdr-bucket-test/zap-reports/report-$(date +%Y-%m-%d_%H-%M-%S).html
+
+      # Step 11: Clean up key file
       - name: Clean up key file
         run: rm gcp-key.json
 
-      # Step 11: Stop Hello World application
+      # Step 12: Stop Hello World application
       - name: Stop Hello World application
         run: kill $(lsof -t -i:8080)
