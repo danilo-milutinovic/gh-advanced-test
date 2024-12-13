@@ -21,5 +21,16 @@ jobs:
       - name: ZAP API Scan
         uses: zaproxy/action-api-scan@v0.6.0
         with:
-          target: "https://demo-cr-812511643824.europe-west1.run.app"  # Replace with your API URL
-          cmd_options: "-config api.disablekey=true"
+          target: "https://demo-cr-812511643824.europe-west1.run.app"
+          cmd_options: "-config api.disablekey=true -J ${{ runner.temp }}/zap-report.json -w ${{ runner.temp }}/zap-report.md -r ${{ runner.temp }}/zap-report.html"
+
+      # Step 3: Debug Output Directory
+      - name: Debug Output Directory
+        run: ls -l ${{ runner.temp }}
+
+      # Step 4: Upload ZAP Reports
+      - name: Upload ZAP Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-reports
+          path: ${{ runner.temp }}/zap-report.*
