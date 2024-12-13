@@ -1,0 +1,34 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: [main]  # Run CodeQL analysis on pushes to the main branch
+  pull_request:
+    branches: [main]  # Analyze changes in pull requests targeting the main branch
+  schedule:
+    - cron: '0 0 * * 0'  # Optional: Run weekly scans (every Sunday at midnight)
+
+jobs:
+  analyze:
+    name: Analyze CodeQL
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # Required for CodeQL to upload results
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Initialize CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'auto'  # Automatically detect supported languages in the repo
+
+      # Step 3: Perform CodeQL Analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
