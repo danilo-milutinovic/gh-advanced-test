@@ -17,31 +17,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Test API Reachability
-      - name: Test API Reachability
+      # Step 2: Verify API Reachability
+      - name: Verify API is Reachable
         run: |
+          echo "Checking API Reachability..."
           STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" https://hello-812511643824.europe-west1.run.app)
           if [ "$STATUS" -ne 200 ]; then
-            echo "API is not reachable (HTTP $STATUS)"
+            echo "API is not reachable (HTTP Status: $STATUS)"
             exit 1
           fi
 
-      # Step 3: Run ZAP API Scan
-      - name: ZAP API Scan
+      # Step 3: Run OWASP ZAP API Scan
+      - name: Run ZAP API Scan
         uses: zaproxy/action-api-scan@v0.6.0
         with:
           target: "https://hello-812511643824.europe-west1.run.app"
-          cmd_options: "-d -J zap-report.json -w zap-report.md -r zap-report.html"
-        continue-on-error: true
+          cmd_options: "-t https://hello-812511643824.europe-west1.run.app -d -J zap-report.json -w zap-report.md -r zap-report.html"
+        env:
+          # Set memory limits to avoid resource issues
+          JAVA_OPTS: "-Xmx512m"
+        continue-on-error: false
 
       # Step 4: Debug Output Directory
-      - name: Debug Output Directory
-        if: always()
-        run: ls -l .
-
+      - name: List Generated Reports
+        run: ls -l zap*.*
+      
       # Step 5: Upload ZAP Reports
       - name: Upload ZAP Reports
-        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: zap-reports
