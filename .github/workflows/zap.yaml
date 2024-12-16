@@ -28,7 +28,7 @@ jobs:
 
       # Step 3: Debug Target URL Inside Docker
       - name: Debug Target URL Inside Docker
-        run: docker run --rm owasp/zap2docker-stable curl -I https://hello-812511643824.europe-west1.run.app
+        run: docker run --rm owasp/zap2docker curl -I https://hello-812511643824.europe-west1.run.app
 
       # Step 4: Run ZAP API Scan
       - name: ZAP API Scan
