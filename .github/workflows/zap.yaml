@@ -26,23 +26,27 @@ jobs:
             exit 1
           fi
 
-      # Step 3: Run ZAP API Scan
+      # Step 3: Debug Target URL Inside Docker
+      - name: Debug Target URL Inside Docker
+        run: docker run --rm owasp/zap2docker-stable curl -I https://hello-812511643824.europe-west1.run.app
+
+      # Step 4: Run ZAP API Scan
       - name: ZAP API Scan
         uses: zaproxy/action-api-scan@v0.6.0
         with:
           target: "https://hello-812511643824.europe-west1.run.app"
-          cmd_options: "-d -J /zap/wrk/zap-report.json -w /zap/wrk/zap-report.md -r /zap/wrk/zap-report.html"
+          cmd_options: "-d -J zap-report.json -w zap-report.md -r zap-report.html"
         continue-on-error: true
 
-      # Step 4: Debug Output Directory
+      # Step 5: Debug Output Directory
       - name: Debug Output Directory
         if: always()
-        run: ls -l /zap/wrk
+        run: ls -l .
 
-      # Step 5: Upload ZAP Reports
+      # Step 6: Upload ZAP Reports
       - name: Upload ZAP Reports
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: zap-reports
-          path: /zap/wrk/zap-report.*
+          path: zap-report.*
