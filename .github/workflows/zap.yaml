@@ -19,20 +19,25 @@ jobs:
 
       # Step 2: Test API Reachability
       - name: Test API Reachability
-        run: curl -I https://demo-cr-812511643824.europe-west1.run.app
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" https://hello-812511643824.europe-west1.run.app)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "API is not reachable (HTTP $STATUS)"
+            exit 1
+          fi
 
       # Step 3: Run ZAP API Scan
       - name: ZAP API Scan
         uses: zaproxy/action-api-scan@v0.6.0
         with:
-          target: "https://demo-cr-812511643824.europe-west1.run.app"
+          target: "https://hello-812511643824.europe-west1.run.app"
           cmd_options: "-d -J /zap/wrk/zap-report.json -w /zap/wrk/zap-report.md -r /zap/wrk/zap-report.html"
         continue-on-error: true
 
       # Step 4: Debug Output Directory
       - name: Debug Output Directory
         if: always()
-        run: ls -l /home/runner/work/gh-advanced-test/gh-advanced-test
+        run: ls -l /zap/wrk
 
       # Step 5: Upload ZAP Reports
       - name: Upload ZAP Reports
@@ -40,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: zap-reports
-          path: /home/runner/work/gh-advanced-test/gh-advanced-test/zap-report.*
+          path: /zap/wrk/zap-report.*
