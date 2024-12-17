@@ -1,0 +1,34 @@
+name: "ZAP Scan for DAST Testing"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  zap_scan:
+    name: Run OWASP ZAP Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Run OWASP ZAP Baseline Scan with Hardcoded URL
+      - name: Run ZAP Baseline Scan
+        run: |
+          docker run --rm \
+          -v $(pwd):/zap/wrk \
+          -t owasp/zap2docker-stable zap-baseline.py \
+          -t https://hello-812511643824.europe-west1.run.app \
+          -r zap_report.html
+
+      # 3. Upload ZAP Scan Report as Artifact
+      - name: Upload ZAP Scan Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: ZAP_Scan_Report
+          path: zap_report.html
+          retention-days: 7
