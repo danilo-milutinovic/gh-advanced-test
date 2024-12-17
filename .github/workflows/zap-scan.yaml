@@ -29,7 +29,7 @@ jobs:
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t https://hello-812511643824.europe-west1.run.app \
-          -r zap_report.html --exit-code 0
+          -r zap_report.html
 
       # 4. Upload ZAP Scan Report as Artifact
       - name: Upload ZAP Scan Report
