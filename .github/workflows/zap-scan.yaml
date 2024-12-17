@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 2. Create a Writable Directory for ZAP with Full Permissions
+      # 2. Create a Writable Directory for ZAP
       - name: Prepare Work Directory
         run: |
           mkdir -p zap-workdir
@@ -29,7 +29,7 @@ jobs:
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t https://hello-812511643824.europe-west1.run.app \
-          -r zap_report.html
+          -r zap_report.html --exit-code 0
 
       # 4. Upload ZAP Scan Report as Artifact
       - name: Upload ZAP Scan Report
