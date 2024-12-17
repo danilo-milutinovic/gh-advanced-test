@@ -1,12 +1,15 @@
-name: "CodeQL"
+name: "CodeQL Analysis"
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  schedule:
-    - cron: '0 0 * * 0' # Weekly scan
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
 
 jobs:
   analyze:
@@ -15,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [javascript-typescript, go]
+        language: [javascrip-typescript, go]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
