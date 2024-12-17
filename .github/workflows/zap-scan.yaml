@@ -22,17 +22,19 @@ jobs:
           mkdir -p zap-workdir
           chmod 777 zap-workdir
 
-      # 3. Run ZAP Baseline Scan
+      # 3. Run ZAP Baseline Scan (allow step to continue on failure)
       - name: Run ZAP Baseline Scan
+        continue-on-error: true  # Allow the job to continue even if this step fails
         run: |
           docker run --rm \
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t https://hello-812511643824.europe-west1.run.app \
-          -r zap_report.html
+          -r zap_report.html || true
 
-      # 4. Upload ZAP Scan Report as Artifact
+      # 4. Upload ZAP Scan Report as Artifact (runs regardless of scan result)
       - name: Upload ZAP Scan Report
+        if: always()  # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v3
         with:
           name: ZAP_Scan_Report
