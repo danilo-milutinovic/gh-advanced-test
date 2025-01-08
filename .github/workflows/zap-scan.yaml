@@ -17,9 +17,6 @@ jobs:
     name: Perform ZAP Scan 
     runs-on: ubuntu-24.04
 
-    outputs:
-      severity: ${{ steps.analyze_report.outputs.severity }}
-
     steps:
       # 1. Checkout Code
       - name: Checkout Code
@@ -40,35 +37,8 @@ jobs:
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t ${{ env.TARGET_URL }} \
           -r zap_report.html || true
-      
-      # 4. Analyze ZAP report
-      - name: Analyze ZAP Report
-        id: analyze_report
-        run: |
-          if grep -q 'High' zap-workdir/zap_report.html; then
-            echo "severity=high" >> $GITHUB_ENV
-          elif grep -q 'Medium' zap-workdir/zap_report.html; then
-            echo "severity=medium" >> $GITHUB_ENV
-          else
-            echo "severity=none" >> $GITHUB_ENV
-        env:
-          GITHUB_ENV: ${{ github.env }}
 
-      # 5. Creates Github Issue if any issue is detected
-      - name: Create GitHub Issue
-        if: steps.analyze_report.outputs.severity != 'none'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `ZAP Scan detected vulnerabilities: ${steps.analyze_report.outputs.severity} severity`,
-              body: `ZAP Scan detected vulnerabilities in the application. Severity level: ${steps.analyze_report.outputs.severity}\n\nPlease review the attached ZAP report.`,
-              labels: ['security', 'ZAP']
-            })
-
-      # 6. Upload ZAP Scan Report as Artifact (runs regardless of scan result)
+      # 4. Upload ZAP Scan Report as Artifact (runs regardless of scan result)
       - name: Upload ZAP Scan Report
         if: always()  # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v4
