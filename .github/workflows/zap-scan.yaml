@@ -14,7 +14,7 @@ env:
 
 jobs:
   zap_scan:
-    name: Perform ZAP Scan 
+    name: Perform DAST scanning of external application endpoint 
     runs-on: ubuntu-24.04
 
     steps:
@@ -29,7 +29,7 @@ jobs:
           chmod 777 zap-workdir
 
       # 3. Run ZAP Baseline Scan (allow step to continue on failure)
-      - name: Run ZAP Baseline Scan
+      - name: Run DAST Scan
         continue-on-error: true  # Allow the job to continue even if this step fails
         run: |
           docker run --rm \
@@ -39,10 +39,10 @@ jobs:
           -r zap_report.html || true
 
       # 4. Upload ZAP Scan Report as Artifact (runs regardless of scan result)
-      - name: Upload ZAP Scan Report
+      - name: Upload DAST Scan Report
         if: always()  # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v4
         with:
-          name: ZAP_Scan_Report
+          name: Dast_Scan_Report
           path: zap-workdir/zap_report.html
           retention-days: ${{ env.RETENTION_DAYS }}
