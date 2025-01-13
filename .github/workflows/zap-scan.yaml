@@ -9,8 +9,9 @@ on:
 
 # Variables - to be changed as per requirements
 env:
-  TARGET_URL: "https://demo-cr-812511643824.europe-west1.run.app"
-  RETENTION_DAYS: 7    
+  TARGET_URL: "https://eod-ml3.appsdemo.se/"
+  RETENTION_DAYS: 7
+#  TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }} # Add this as a secret in your repository    
 
 jobs:
   zap_scan:
@@ -46,3 +47,15 @@ jobs:
           name: Dast_Scan_Report
           path: zap-workdir/zap_report.html
           retention-days: ${{ env.RETENTION_DAYS }}
+      
+      # 5. Analyze ZAP Scan Report and Notify Teams
+      #- name: Notify Microsoft Teams on Vulnerability Detection
+      #  if: always()  # Runs regardless of previous step's success
+      #  run: |
+      #    if grep -q "FAIL-NEW" zap-workdir/zap_report.html; then
+      #      curl -H 'Content-Type: application/json' -d '{
+      #        "title": "ZAP Scan Vulnerability Detected",
+      #        "text": "Vulnerabilities have been detected during the ZAP scan. Please review the report."
+      #      }' "${{ env.TEAMS_WEBHOOK_URL }}"
+      #    else
+      #      echo "No vulnerabilities detected. Teams notification not sent."    
