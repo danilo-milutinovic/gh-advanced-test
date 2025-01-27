@@ -1,18 +1,21 @@
 name: "ZAP Scan - Public endpoint DAST Testing"
 
+# To be changed based on the requirements
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
+# Variables - to be changed as per requirements
 env:
   TARGET_URL: "https://eod-ml3.appsdemo.se/"
   RETENTION_DAYS: 7
+#  TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }} # Add this as a secret in your repository    
 
 jobs:
   zap_scan:
-    name: Perform DAST scanning of external application endpoint
+    name: Perform DAST scanning of external application endpoint 
     runs-on: ubuntu-24.04
 
     steps:
@@ -24,22 +27,21 @@ jobs:
       - name: Prepare Work Directory
         run: |
           mkdir -p zap-workdir
-          sudo chown 1001:1001 zap-workdir
-          chmod 775 zap-workdir
+          chmod 777 zap-workdir
 
       # 3. Run ZAP Baseline Scan (allow step to continue on failure)
       - name: Run DAST Scan
-        continue-on-error: true
+        continue-on-error: true  # Allow the job to continue even if this step fails
         run: |
           docker run --rm \
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t ${{ env.TARGET_URL }} \
-          -r zap_report.html || echo "ZAP Baseline Scan encountered issues, check the logs."
+          -r zap_report.html || true
 
-      # 4. Upload ZAP Scan Report as Artifact
+      # 4. Upload ZAP Scan Report as Artifact (runs regardless of scan result)
       - name: Upload DAST Scan Report
-        if: always()
+        if: always()  # Ensure this step runs even if previous steps fail
         uses: actions/upload-artifact@v4
         with:
           name: Dast_Scan_Report
