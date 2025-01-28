@@ -46,8 +46,7 @@ jobs:
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t ${{ env.TARGET_URL }} \
-          -r zap_report.html \
-          -w zap_report.json || true
+          -r zap_report.html || true
 
       # 5. Upload ZAP Scan Reports as Artifact (runs regardless of scan result)
       - name: Upload DAST Scan Reports
