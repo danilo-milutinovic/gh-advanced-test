@@ -37,8 +37,7 @@ jobs:
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t ${{ env.TARGET_URL }} \
-          -r zap_report.html \
-          -w zap_report.json || echo "ZAP scan failed, but continuing workflow."
+          -r zap_report.html || echo "ZAP scan failed, but continuing workflow."
 
       # 4. Debugging: List Files in zap-workdir
       - name: Debug - List Files in zap-workdir
