@@ -3,8 +3,6 @@ name: "ZAP Scan - Public endpoint DAST Testing"
 on:
   push:
     branches: [main]
-    paths:
-      - 'src/**'  # Trigger only when changes are made to the src directory
   pull_request:
     branches: [main]
 
