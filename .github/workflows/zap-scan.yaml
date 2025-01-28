@@ -3,6 +3,8 @@ name: "ZAP Scan - Public endpoint DAST Testing"
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'  # Trigger only when changes are made to the src directory
   pull_request:
     branches: [main]
 
@@ -13,7 +15,7 @@ env:
 
 jobs:
   zap_scan:
-    name: Perform DAST scanning of external application endpoint
+    name: Run DAST scan 
     runs-on: ubuntu-24.04
 
     steps:
@@ -27,9 +29,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/zap-cache
-          key: zap-docker-image-${{ runner.os }}
+          key: zap-docker-image-${{ runner.os }}-v2.12.0
           restore-keys: |
-            zap-docker-image-${{ runner.os }}
+            zap-docker-image-${{ runner.os }}-
 
       # 3. Create a Writable Directory for ZAP
       - name: Prepare Work Directory
@@ -40,15 +42,23 @@ jobs:
       # 4. Run ZAP Baseline Scan (allow step to continue on failure)
       - name: Run DAST Scan
         continue-on-error: true
-        timeout-minutes: 30  # Add a timeout for the scan
+        timeout-minutes: 30
         run: |
+          echo "Running ZAP scan on ${{ env.TARGET_URL }}"
           docker run --rm \
           -v $(pwd)/zap-workdir:/zap/wrk \
           -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
           -t ${{ env.TARGET_URL }} \
-          -r zap_report.html || true
+          -r zap_report.html || echo "ZAP scan failed, but continuing workflow."
 
-      # 5. Upload ZAP Scan Reports as Artifact (runs regardless of scan result)
+      # 5. Save ZAP Docker Image Cache
+      - name: Save ZAP Docker Image Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/zap-cache
+          key: zap-docker-image-${{ runner.os }}-v2.12.0
+
+      # 6. Upload ZAP Scan Reports as Artifact (runs regardless of scan result)
       - name: Upload DAST Scan Reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -57,15 +67,16 @@ jobs:
           path: zap-workdir/
           retention-days: ${{ env.RETENTION_DAYS }}
 
-      # 6. Analyze ZAP Scan Report and Notify Teams
-      # - name: Notify via Microsoft Teams on Vulnerability Detection
-      #   if: always()
-      #   run: |
-      #     if grep -q "FAIL-NEW" zap-workdir/zap_report.html; then
-      #       curl -H 'Content-Type: application/json' -d '{
-      #         "title": "ZAP Scan Vulnerability Detected",
-      #         "text": "Vulnerabilities have been detected during the ZAP scan. Please review the report.\n\n**Vulnerability Count**: $(grep -o 'FAIL-NEW' zap-workdir/zap_report.html | wc -l)\n**Report Link**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      #       }' "${{ env.TEAMS_WEBHOOK_URL }}"
-      #     else
-      #       echo "No vulnerabilities detected. Teams notification not sent."
-      #     fi
+      # 7. Debugging: List Files in zap-workdir
+      - name: Debug - List Files in zap-workdir
+        if: always()
+        run: |
+          echo "Files in zap-workdir:"
+          ls -la zap-workdir
+
+      # 8. Debugging: List Files in /tmp/zap-cache
+      - name: Debug - List Files in /tmp/zap-cache
+        if: always()
+        run: |
+          echo "Files in /tmp/zap-cache:"
+          ls -la /tmp/zap-cache
