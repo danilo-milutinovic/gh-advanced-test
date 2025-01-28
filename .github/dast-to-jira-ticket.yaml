@@ -1,0 +1,126 @@
+name: "DAST Scan -> JIRA Integration"
+
+on:
+  workflow_run:
+    workflows: ["DAST Scan - Public endpoint DAST Testing"]
+    types:
+      - completed
+
+jobs:
+  jira_integration:
+    name: Parse DAST Report and Create JIRA Issues
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download ZAP Scan Report Artifact
+      - name: Download ZAP Scan Report
+        uses: actions/download-artifact@v4
+        with:
+          name: Dast_Scan_Report
+          path: zap-report-dir
+
+      # Step 2: Set Up Python Environment with Caching
+      - name: Set Up Python Environment
+        id: python-cache
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: venv-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      # Step 3: Parse ZAP Report and Create JIRA Issues
+      - name: Process ZAP Report and Create JIRA Issues
+        env:
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+        run: |
+          python <<EOF
+          import requests
+          import json
+          import hashlib
+          import logging
+
+          # Configure logging
+          logging.basicConfig(level=logging.INFO)
+          logger = logging.getLogger(__name__)
+
+          # JIRA Credentials
+          JIRA_URL = "${{ secrets.JIRA_URL }}"
+          JIRA_USER = "${{ secrets.JIRA_USER }}"
+          JIRA_API_TOKEN = "${{ secrets.JIRA_API_TOKEN }}"
+          PROJECT_KEY = "${{ secrets.JIRA_PROJECT_KEY }}"
+
+          # Severity Mapping
+          priority_mapping = {
+              "High Risk": "Critical",
+              "Medium Risk": "High",
+              "Low Risk": "Low",
+          }
+
+          def parse_report(file_path):
+              """Parse the ZAP JSON report."""
+              with open(file_path, 'r') as f:
+                  return json.load(f)
+
+          def create_jira_issue(issue_payload):
+              """Create a JIRA issue."""
+              response = requests.post(
+                  f"{JIRA_URL}/rest/api/2/issue",
+                  auth=(JIRA_USER, JIRA_API_TOKEN),
+                  headers={"Content-Type": "application/json"},
+                  json=issue_payload
+              )
+              return response
+
+          # Parse the ZAP report
+          report = parse_report('zap-report-dir/zap_report.json')
+
+          # Process vulnerabilities
+          for vulnerability in report['vulnerabilities']:
+              risk_level = vulnerability['risk']
+              name = vulnerability['name']
+              description = vulnerability.get('description', 'No description available')
+              solution = vulnerability.get('solution', 'No solution available')
+              instances = "\n".join(vulnerability.get('instances', []))
+
+              # Map risk level to JIRA priority
+              jira_priority = priority_mapping.get(risk_level, "Medium")
+
+              # Generate a unique hash for the vulnerability
+              vuln_identifier = f"{name}-{risk_level}-{instances}"
+              vuln_hash = hashlib.md5(vuln_identifier.encode()).hexdigest()
+
+              # Format JIRA issue
+              issue_payload = {
+                  "fields": {
+                      "project": {"key": PROJECT_KEY},
+                      "summary": f"[{risk_level}] {name} ({vuln_hash})",
+                      "description": f"""
+                          **Vulnerability**: {name}
+                          **Risk Level**: {risk_level}
+                          **Details**: {description}
+                          **Instances**: {instances}
+                          **Solution**: {solution}
+                      """,
+                      "issuetype": {"name": "Bug"},
+                      "priority": {"name": jira_priority},
+                      "labels": ["DAST", "ZAP"],
+                  }
+              }
+
+              # Create issue in JIRA
+              response = create_jira_issue(issue_payload)
+              if response.status_code == 201:
+                  logger.info(f"Created JIRA issue: {response.json()['key']}")
+              else:
+                  logger.error(f"Failed to create JIRA issue: {response.status_code}, {response.text}")
+          EOF
