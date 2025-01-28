@@ -64,17 +64,3 @@ jobs:
           name: Dast_Scan_Reports
           path: zap-workdir/
           retention-days: ${{ env.RETENTION_DAYS }}
-
-      # 7. Debugging: List Files in zap-workdir
-      - name: Debug - List Files in zap-workdir
-        if: always()
-        run: |
-          echo "Files in zap-workdir:"
-          ls -la zap-workdir
-
-      # 8. Debugging: List Files in /tmp/zap-cache
-      - name: Debug - List Files in /tmp/zap-cache
-        if: always()
-        run: |
-          echo "Files in /tmp/zap-cache:"
-          ls -la /tmp/zap-cache
