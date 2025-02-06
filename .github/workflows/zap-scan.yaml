@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  TARGET_URL: "https://eod-ml3.appsdemo.se/"
+  TARGET_URL: "https://dev-ondemand.ericsson.net/"
   RETENTION_DAYS: 7
   # TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }} # Add this as a secret in your repository
 
@@ -35,7 +35,7 @@ jobs:
           echo "Running ZAP scan on ${{ env.TARGET_URL }}"
           docker run --rm \
           -v $(pwd)/zap-workdir:/zap/wrk \
-          -t ghcr.io/zaproxy/zaproxy zap-baseline.py \
+          -t ghcr.io/zaproxy/zaproxy zap-full-scan.py \
           -t ${{ env.TARGET_URL }} \
           -r zap_report.html || echo "ZAP scan failed, but continuing workflow."
 

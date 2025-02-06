@@ -2,7 +2,7 @@ name: "DAST Scan -> JIRA Integration"
 
 on:
   workflow_run:
-    workflows: ["DAST Scan - Public endpoint DAST Testing"]
+    workflows: ["ZAP Scan - Public endpoint DAST Testing"]
     types:
       - completed
 
@@ -11,12 +11,15 @@ jobs:
     name: Parse DAST Report and Create JIRA Issues
     runs-on: ubuntu-latest
 
+    # Only run this job if the triggering workflow completed successfully
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
       # Step 1: Download ZAP Scan Report Artifact
       - name: Download ZAP Scan Report
         uses: actions/download-artifact@v4
         with:
-          name: Dast_Scan_Report
+          name: Dast_Scan_Reports
           path: zap-report-dir
 
       # Step 2: Set Up Python Environment with Caching
@@ -43,21 +46,23 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
         run: |
+          source venv/bin/activate
           python <<EOF
           import requests
           import json
           import hashlib
           import logging
+          import os
 
           # Configure logging
           logging.basicConfig(level=logging.INFO)
           logger = logging.getLogger(__name__)
 
           # JIRA Credentials
-          JIRA_URL = "${{ secrets.JIRA_URL }}"
-          JIRA_USER = "${{ secrets.JIRA_USER }}"
-          JIRA_API_TOKEN = "${{ secrets.JIRA_API_TOKEN }}"
-          PROJECT_KEY = "${{ secrets.JIRA_PROJECT_KEY }}"
+          JIRA_URL = os.getenv("JIRA_URL")
+          JIRA_USER = os.getenv("JIRA_USER")
+          JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN")
+          PROJECT_KEY = os.getenv("PROJECT_KEY")
 
           # Severity Mapping
           priority_mapping = {
