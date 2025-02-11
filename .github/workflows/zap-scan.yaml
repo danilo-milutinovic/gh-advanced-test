@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  TARGET_URL: "https://dev-ondemand.ericsson.net/"
+  TARGET_URL: "https://hello-812511643824.europe-west1.run.app"
   RETENTION_DAYS: 7
   # TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }} # Add this as a secret in your repository
 
