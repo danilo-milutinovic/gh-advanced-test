@@ -1,4 +1,4 @@
-name: "ZAP Scan - Public endpoint DAST Testing"
+name: "ZAP Scan & CodeQL Security Analysis"
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
 env:
   TARGET_URL: "https://hello-812511643824.europe-west1.run.app"
   RETENTION_DAYS: 7
-  # TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }} # Add this as a secret in your repository
 
 jobs:
   zap_scan:
@@ -54,3 +53,39 @@ jobs:
           name: Dast_Scan_Reports
           path: zap-workdir/
           retention-days: ${{ env.RETENTION_DAYS }}
+
+  codeql_scan:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      # 1. Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Initialize CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go, javascript
+
+      # 3. Run CodeQL Analysis for Go
+      - name: Run CodeQL Analysis (Go)
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go"
+
+      # 4. Run CodeQL Analysis for JavaScript
+      - name: Run CodeQL Analysis (JavaScript)
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+
+      # 5. Upload CodeQL SARIF Results
+      - name: Upload CodeQL SARIF Reports
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
