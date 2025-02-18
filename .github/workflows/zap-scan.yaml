@@ -54,10 +54,3 @@ jobs:
           path: zap-workdir/
           retention-days: ${{ env.RETENTION_DAYS }}
 
-  codeql_scan:
-    name: CodeQL Security Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-
