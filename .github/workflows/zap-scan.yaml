@@ -53,4 +53,3 @@ jobs:
           name: Dast_Scan_Reports
           path: zap-workdir/
           retention-days: ${{ env.RETENTION_DAYS }}
-
