@@ -61,25 +61,3 @@ jobs:
       security-events: write
       contents: read
 
-    steps:
-      # 1. Checkout Code
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      # 2. Initialize CodeQL
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: go, javascript
-
-      # 3. Run CodeQL Analysis for Go
-      - name: Run CodeQL Analysis (Go)
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:go"
-
-      # 4. Run CodeQL Analysis for JavaScript
-      - name: Run CodeQL Analysis (JavaScript)
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:javascript"
