@@ -1,4 +1,4 @@
-name: "ZAP Scan & CodeQL Security Analysis"
+name: "DAST Scan"
 
 on:
   push:
